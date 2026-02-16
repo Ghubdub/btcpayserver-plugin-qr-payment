@@ -36,10 +36,4 @@ public class QRPaymentPlugin : BasePlugin
         
         base.Configure(pages);
     }
-
-    public override void PreRegister(IEnumerable<IPluginHookFilter> filters)
-    {
-        filters.Add(new QRPaymentInvoiceFilter());
-        base.PreRegister(filters);
-    }
 }
