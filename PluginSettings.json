@@ -1,0 +1,15 @@
+{
+  "Name": "QR Payment Method",
+  "Description": "Custom QR code payment method with configurable content and manual settlement",
+  "Version": "1.0.0",
+  "Author": "Your Name",
+  "Website": "https://github.com/yourusername/btcpay-qr-plugin",
+  "License": "MIT",
+  "Tags": ["payment", "qr", "custom"],
+  "Dependencies": {
+    "BTCPayServer": ">=2.0.0"
+  },
+  "Scripts": {
+    "postinstall": "dotnet build"
+  }
+}

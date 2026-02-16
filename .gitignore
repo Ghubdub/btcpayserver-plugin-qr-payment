@@ -1,0 +1,70 @@
+# Build results
+[Tt]ools/
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+bld/
+[Bb]uild/
+
+# NuGet packages
+*.nupkg
+packages/
+*.packages
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Visual Studio 2015 cache/options directory
+.vs/
+.vscode/
+
+# Roslyn cache
+/.vs/
+
+# MSTest test Results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# NDepend
+_NDepend*/
+
+# Build results of the ATL ActiveX/MFC project
+ReleaseMinSize/
+DebugMinSize/
+
+# .NET Core
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# ASP.NET Core
+wwwroot/Plugins/*/
+!wwwroot/Plugins/.gitkeep
+
+# Rider
+.idea/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+
+# Test results
+coverage/
+
+# Backup files
+*.bak
+*.backup

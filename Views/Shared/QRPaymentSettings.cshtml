@@ -1,0 +1,138 @@
+@{
+    var storeId = ViewBag.StoreId;
+    var config = ViewBag.Config;
+}
+
+<div class="tab-pane active" id="QRPayment">
+    <h3>QR Payment Method Configuration</h3>
+    <p class="text-muted">Configure your custom QR code payment method that appears at checkout.</p>
+    
+    <form method="post" action="@Url.Action("UpdateQRPaymentConfig", "QRPaymentSettings")">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="storeId" value="@storeId" />
+        
+        <div class="form-group">
+            <label for="Title">Payment Method Title</label>
+            <input type="text" 
+                   class="form-control" 
+                   id="Title" 
+                   name="Title" 
+                   value="@(config?.Title ?? "QR Payment")"
+                   maxlength="200"
+                   placeholder="e.g., Scan to Pay, Custom QR, etc.">
+            <small class="form-text text-muted">The title displayed on the checkout page (e.g., "Scan to Pay")</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="Content">Description Content</label>
+            <textarea class="form-control" 
+                      id="Content" 
+                      name="Content" 
+                      rows="3"
+                      maxlength="1000"
+                      placeholder="e.g., Scan this QR code with any payment app">@(config?.Content)</textarea>
+            <small class="form-text text-muted">Instructions shown below the title</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="Order">Display Order</label>
+            <input type="number" 
+                   class="form-control" 
+                   id="Order" 
+                   name="Order" 
+                   value="@(config?.Order ?? 99)"
+                   min="0"
+                   max="999"
+                   placeholder="99">
+            <small class="form-text text-muted">Lower numbers appear first in the payment methods list</small>
+        </div>
+        
+        <div class="form-group">
+            <div class="checkbox">
+                <label>
+                    <input type="checkbox" 
+                           id="IsEnabled" 
+                           name="IsEnabled" 
+                           value="true"
+                           @(config?.IsEnabled == true ? "checked" : "")>
+                    Enable QR Payment Method
+                </label>
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <i class="fa fa-save"></i> Save Configuration
+            </button>
+            <a href="@Url.Action("Index", "Store")" class="btn btn-secondary">
+                Cancel
+            </a>
+        </div>
+    </form>
+    
+    @if (config?.IsEnabled == true)
+    {
+        <div class="preview-section">
+            <h4>Checkout Preview</h4>
+            <div class="preview-container">
+                <div class="qr-payment-container preview">
+                    <div class="qr-payment-header">
+                        <h3>@(config?.Title ?? "QR Payment")</h3>
+                        <p>@(config?.Content ?? "Scan this QR code to pay")</p>
+                    </div>
+                    <div class="qr-payment-qrcode">
+                        <div class="qr-placeholder">
+                            <i class="fa fa-qrcode fa-4x"></i>
+                            <span>QR Code Preview</span>
+                        </div>
+                    </div>
+                    <div class="qr-payment-details">
+                        <div class="detail-row">
+                            <span class="label">Amount:</span>
+                            <span class="value amount">$123.45 USD</span>
+                        </div>
+                    </div>
+                    <div class="qr-payment-actions">
+                        <button class="btn btn-primary btn-lg btn-block" disabled>
+                            <i class="fa fa-check-circle"></i> Mark as Paid
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+.preview-section {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.preview-container {
+    max-width: 400px;
+    margin: 20px 0;
+}
+
+.qr-payment-container.preview {
+    border: 2px dashed #ccc;
+    padding: 20px;
+    border-radius: 8px;
+    background: #f9f9f9;
+}
+
+.qr-placeholder {
+    text-align: center;
+    padding: 40px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    color: #999;
+}
+
+.qr-placeholder i {
+    display: block;
+    margin-bottom: 10px;
+}
+</style>
