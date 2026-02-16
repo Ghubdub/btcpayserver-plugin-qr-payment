@@ -1,0 +1,162 @@
+@using BTCPayServer.Plugins.QRPayment
+@model dynamic
+
+@{
+    var invoiceId = ViewBag.InvoiceId ?? "";
+}
+<!-- QR Payment Button -->
+<button type="button" 
+        class="btcpay-pill m-0 payment-method qr-payment-btn"
+        data-toggle="modal" 
+        data-target="#qr-payment-modal-@invoiceId"
+        data-invoice="@invoiceId">
+    <span>📱</span>
+    <span>QR Payment</span>
+</button>
+
+<!-- QR Payment Modal -->
+<div class="modal fade" id="qr-payment-modal-@invoiceId" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">📱 QR Payment</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center">
+                <div id="qr-content-@invoiceId" class="qr-content">
+                    <p class="text-muted">
+                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                        Loading QR code...
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success mark-paid-btn" data-invoice="@invoiceId">
+                    <i class="fa fa-check"></i> Mark as Paid
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    var invoiceId = '@invoiceId';
+    
+    // Load QR code when modal opens
+    $('[data-target="#qr-payment-modal-@invoiceId"]').on('shown.bs.modal', function() {
+        loadQRCode(invoiceId);
+    });
+    
+    // Mark as paid button
+    $('.mark-paid-btn[data-invoice="@invoiceId"]').on('click', function() {
+        markAsPaid(invoiceId, $(this));
+    });
+    
+    function loadQRCode(id) {
+        var container = $('#qr-content-' + id);
+        container.html('<p class="text-muted"><span class="spinner-border spinner-border-sm"></span> Loading...</p>');
+        
+        fetch('/api/v1/plugins/qr-payment/invoices/' + id + '/qr')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.error) {
+                    container.html('<p class="text-danger">' + data.error + '</p>');
+                    return;
+                }
+                
+                var html = '<div class="qr-code-container mb-3">';
+                if (data.qrCodeContent) {
+                    // Generate QR code on client side or use server-generated
+                    html += '<div class="qr-placeholder p-4 bg-light rounded">' +
+                            '<i class="fa fa-qrcode fa-4x text-muted"></i>' +
+                            '<p class="mt-2 text-muted">QR: ' + data.qrCodeContent.substring(0, 50) + '...</p></div>';
+                } else {
+                    html += '<p class="text-muted">No QR code available for this invoice</p>';
+                }
+                html += '</div>';
+                html += '<div class="invoice-info">';
+                html += '<strong>Invoice:</strong> ' + id.substring(0, 12) + '...<br>';
+                if (data.isPaid) {
+                    html += '<span class="badge badge-success">Already Paid</span>';
+                } else {
+                    html += '<span class="badge badge-warning">Pending Payment</span>';
+                }
+                html += '</div>';
+                container.html(html);
+            })
+            .catch(function(err) {
+                container.html('<p class="text-danger">Error loading QR code</p>');
+                console.error(err);
+            });
+    }
+    
+    function markAsPaid(id, btn) {
+        if (!confirm('Are you sure you want to mark this invoice as paid?')) {
+            return;
+        }
+        
+        btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Processing...');
+        
+        fetch('/api/v1/plugins/qr-payment/invoices/' + id + '/mark-paid', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ notes: 'Marked as paid via checkout' })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.error) {
+                alert('Error: ' + data.error);
+                btn.prop('disabled', false).html('<i class="fa fa-check"></i> Mark as Paid');
+            } else {
+                $('#qr-content-' + id).html(
+                    '<div class="alert alert-success">' +
+                    '<i class="fa fa-check-circle"></i> Payment confirmed!<br>' +
+                    '<small>' + new Date(data.paidAt).toLocaleString() + '</small>' +
+                    '</div>'
+                );
+                setTimeout(function() {
+                    $('#qr-payment-modal-' + id).modal('hide');
+                    location.reload();
+                }, 2000);
+            }
+        })
+        .catch(function(err) {
+            alert('An error occurred. Please try again.');
+            btn.prop('disabled', false).html('<i class="fa fa-check"></i> Mark as Paid');
+        });
+    }
+})();
+</script>
+
+<style>
+.qr-payment-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.qr-payment-btn:hover {
+    background: #e9ecef;
+    border-color: #adb5bd;
+}
+
+.qr-placeholder {
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.modal-header .close {
+    margin: -0.5rem -1rem -0.5rem auto;
+}
+</style>
