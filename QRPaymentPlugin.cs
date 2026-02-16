@@ -1,9 +1,8 @@
-using BTCPayServer.Abstractions.Contracts;
-using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Plugins.Mvc;
 using BTCPayServer.Plugins.QRPayment.Data;
 using BTCPayServer.Plugins.QRPayment.Services;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BTCPayServer.Plugins.QRPayment;

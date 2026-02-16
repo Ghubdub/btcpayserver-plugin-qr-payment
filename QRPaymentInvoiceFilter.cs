@@ -1,4 +1,4 @@
-using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Plugins.Mvc;
 using BTCPayServer.Plugins.QRPayment.Services;
 
 namespace BTCPayServer.Plugins.QRPayment;
