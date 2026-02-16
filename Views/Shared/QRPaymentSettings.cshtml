@@ -5,7 +5,7 @@
 
 <div class="tab-pane active" id="QRPayment">
     <h3>QR Payment Method Configuration</h3>
-    <p class="text-muted">Configure your custom QR code payment method that appears at checkout.</p>
+    <p class="text-muted">Configure custom QR code generation and manual payment settlement.</p>
     
     <form method="post" action="@Url.Action("UpdateQRPaymentConfig", "QRPaymentSettings")">
         @Html.AntiForgeryToken()
@@ -20,18 +20,18 @@
                    value="@(config?.Title ?? "QR Payment")"
                    maxlength="200"
                    placeholder="e.g., Scan to Pay, Custom QR, etc.">
-            <small class="form-text text-muted">The title displayed on the checkout page (e.g., "Scan to Pay")</small>
+            <small class="form-text text-muted">The title displayed in your documentation</small>
         </div>
         
         <div class="form-group">
-            <label for="Content">Description Content</label>
+            <label for="Content">Description</label>
             <textarea class="form-control" 
                       id="Content" 
                       name="Content" 
                       rows="3"
                       maxlength="1000"
-                      placeholder="e.g., Scan this QR code with any payment app">@(config?.Content)</textarea>
-            <small class="form-text text-muted">Instructions shown below the title</small>
+                      placeholder="Instructions for customers">@(config?.Content)</textarea>
+            <small class="form-text text-muted">Description of the payment method</small>
         </div>
         
         <div class="form-group">
@@ -44,7 +44,7 @@
                    min="0"
                    max="999"
                    placeholder="99">
-            <small class="form-text text-muted">Lower numbers appear first in the payment methods list</small>
+            <small class="form-text text-muted">Order in settings list</small>
         </div>
         
         <div class="form-group">
@@ -55,7 +55,7 @@
                            name="IsEnabled" 
                            value="true"
                            @(config?.IsEnabled == true ? "checked" : "")>
-                    Enable QR Payment Method
+                    Enable QR Payment API
                 </label>
             </div>
         </div>
@@ -70,69 +70,92 @@
         </div>
     </form>
     
-    @if (config?.IsEnabled == true)
-    {
-        <div class="preview-section">
-            <h4>Checkout Preview</h4>
-            <div class="preview-container">
-                <div class="qr-payment-container preview">
-                    <div class="qr-payment-header">
-                        <h3>@(config?.Title ?? "QR Payment")</h3>
-                        <p>@(config?.Content ?? "Scan this QR code to pay")</p>
-                    </div>
-                    <div class="qr-payment-qrcode">
-                        <div class="qr-placeholder">
-                            <i class="fa fa-qrcode fa-4x"></i>
-                            <span>QR Code Preview</span>
-                        </div>
-                    </div>
-                    <div class="qr-payment-details">
-                        <div class="detail-row">
-                            <span class="label">Amount:</span>
-                            <span class="value amount">$123.45 USD</span>
-                        </div>
-                    </div>
-                    <div class="qr-payment-actions">
-                        <button class="btn btn-primary btn-lg btn-block" disabled>
-                            <i class="fa fa-check-circle"></i> Mark as Paid
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    }
+    <hr />
+    
+    <h4>API Endpoints</h4>
+    <div class="alert alert-info">
+        <h5><i class="fa fa-code"></i> Available Endpoints</h5>
+        <ul>
+            <li><code>GET /api/v1/plugins/qr-payment/stores/{storeId}/config</code> - Get configuration</li>
+            <li><code>PUT /api/v1/plugins/qr-payment/stores/{storeId}/config</code> - Update configuration</li>
+            <li><code>POST /api/v1/plugins/qr-payment/stores/{storeId}/generate-qr</code> - Generate QR code</li>
+            <li><code>POST /api/v1/plugins/qr-payment/invoices/{invoiceId}/mark-paid</code> - Mark invoice as paid</li>
+            <li><code>GET /api/v1/plugins/qr-payment/invoices/{invoiceId}/status</code> - Get payment status</li>
+        <p </ul>
+       ><small>All endpoints require Greenfield API authentication.</small></p>
+    </div>
+    
+    <h4>Generate QR Code Example</h4>
+    <pre><code>curl -X POST \
+  -H "Authorization: token YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"invoiceId":"INV123","amount":"99.99","currency":"USD","note":"Payment for order #123"}' \
+  https://your-btcpay-server.com/api/v1/plugins/qr-payment/stores/YOUR_STORE_ID/generate-qr</code></pre>
+    
+    <h4>Mark as Paid Example</h4>
+    <pre><code>curl -X POST \
+  -H "Authorization: token YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"notes":"Received via bank transfer"}' \
+  https://your-btcpay-server.com/api/v1/plugins/qr-payment/invoices/INV123/mark-paid</code></pre>
 </div>
 
 <style>
-.preview-section {
+.form-group {
+    margin-bottom: 24px;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group textarea {
+    max-width: 100%;
+}
+
+.checkbox label {
+    font-weight: normal;
+    cursor: pointer;
+}
+
+.form-actions {
     margin-top: 30px;
     padding-top: 20px;
     border-top: 1px solid #e0e0e0;
 }
 
-.preview-container {
-    max-width: 400px;
-    margin: 20px 0;
+.form-actions .btn {
+    margin-right: 8px;
 }
 
-.qr-payment-container.preview {
-    border: 2px dashed #ccc;
-    padding: 20px;
-    border-radius: 8px;
-    background: #f9f9f9;
-}
-
-.qr-placeholder {
-    text-align: center;
-    padding: 40px;
-    background: #fff;
-    border: 1px solid #ddd;
+.alert {
+    padding: 16px;
     border-radius: 4px;
-    color: #999;
+    margin: 16px 0;
 }
 
-.qr-placeholder i {
-    display: block;
-    margin-bottom: 10px;
+.alert-info {
+    background: #d1ecf1;
+    border: 1px solid #bee5eb;
+    color: #0c5460;
+}
+
+pre {
+    background: #f5f5f5;
+    padding: 12px;
+    border-radius: 4px;
+    overflow-x: auto;
+}
+
+code {
+    background: #f0f0f0;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: monospace;
 }
 </style>

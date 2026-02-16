@@ -10,10 +10,12 @@ namespace BTCPayServer.Plugins.QRPayment.Controllers;
 public class QRPaymentApiController : ControllerBase
 {
     private readonly QRPaymentService _qrPaymentService;
+    private readonly QRCodeGeneratorService _qrCodeGenerator;
 
-    public QRPaymentApiController(QRPaymentService qrPaymentService)
+    public QRPaymentApiController(QRPaymentService qrPaymentService, QRCodeGeneratorService qrCodeGenerator)
     {
         _qrPaymentService = qrPaymentService;
+        _qrCodeGenerator = qrCodeGenerator;
     }
 
     /// <summary>
@@ -69,24 +71,20 @@ public class QRPaymentApiController : ControllerBase
     }
 
     /// <summary>
-    /// Gets the QR code for an invoice
+    /// Generate a QR code for a payment
     /// </summary>
-    [HttpGet("invoices/{invoiceId}/qr")]
+    [HttpPost("stores/{storeId}/generate-qr")]
     [Authorize(AuthenticationSchemes = "Greenfield")]
-    public async Task<IActionResult> GetInvoiceQR(string invoiceId)
+    public IActionResult GenerateQRCode(string storeId, [FromBody] GenerateQRRequest request)
     {
-        var invoice = await _qrPaymentService.GetInvoiceQR(invoiceId);
-        if (invoice == null)
-            return NotFound(new { error = "Invoice QR not found" });
-
+        var qrContent = $"{{\"invoice\":\"{request.InvoiceId}\",\"amount\":\"{request.Amount}\",\"currency\":\"{request.Currency}\",\"note\":\"{request.Note ?? ""}\"}}";
+        
+        var qrCodeImage = _qrCodeGenerator.GenerateQRCode(qrContent, 250);
+        
         return Ok(new
         {
-            invoice.InvoiceId,
-            invoice.QRCodeContent,
-            invoice.IsPaid,
-            invoice.PaidAt,
-            invoice.PaidBy,
-            invoice.PaymentNotes
+            qrCodeImage,
+            content = qrContent
         });
     }
 
@@ -104,10 +102,6 @@ public class QRPaymentApiController : ControllerBase
         if (invoice == null)
             return NotFound(new { error = "Invoice not found or already paid" });
 
-        // Here you would call BTCPay Server's invoice settlement API
-        // This is a placeholder for the actual settlement logic
-        await SettleInvoice(invoiceId);
-
         return Ok(new
         {
             invoice.InvoiceId,
@@ -115,20 +109,29 @@ public class QRPaymentApiController : ControllerBase
             invoice.PaidAt,
             invoice.PaidBy,
             invoice.PaymentNotes,
-            message = "Invoice marked as paid and settled"
+            message = "Invoice marked as paid"
         });
     }
 
     /// <summary>
-    /// Internal method to settle the invoice in BTCPay Server
+    /// Gets payment status for an invoice
     /// </summary>
-    private async Task SettleInvoice(string invoiceId)
+    [HttpGet("invoices/{invoiceId}/status")]
+    [Authorize(AuthenticationSchemes = "Greenfield")]
+    public async Task<IActionResult> GetInvoiceStatus(string invoiceId)
     {
-        // TODO: Implement actual invoice settlement via BTCPay Server API
-        // This would typically call the internal invoice settlement endpoint
-        // For now, this is a placeholder
-        
-        await Task.CompletedTask;
+        var invoice = await _qrPaymentService.GetInvoiceQR(invoiceId);
+        if (invoice == null)
+            return NotFound(new { error = "Invoice not found" });
+
+        return Ok(new
+        {
+            invoice.InvoiceId,
+            invoice.IsPaid,
+            invoice.PaidAt,
+            invoice.PaidBy,
+            invoice.PaymentNotes
+        });
     }
 }
 
@@ -138,6 +141,14 @@ public class UpdateConfigRequest
     public string? Content { get; set; }
     public bool? IsEnabled { get; set; }
     public int? Order { get; set; }
+}
+
+public class GenerateQRRequest
+{
+    public string InvoiceId { get; set; } = string.Empty;
+    public string Amount { get; set; } = string.Empty;
+    public string Currency { get; set; } = "USD";
+    public string? Note { get; set; }
 }
 
 public class MarkPaidRequest

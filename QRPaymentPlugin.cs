@@ -11,7 +11,7 @@ public class QRPaymentPlugin : BasePlugin
 {
     public override string Identifier => "BTCPayServer.Plugins.QRPayment";
     public override string DisplayName => "QR Payment Method";
-    public override string Description => "Custom QR code payment method with configurable content";
+    public override string Description => "Custom QR code payment method with API for manual invoice settlement";
 
     public override void Execute(IServiceCollection services)
     {
@@ -31,9 +31,6 @@ public class QRPaymentPlugin : BasePlugin
 
     public override void Configure(Func<string, Microsoft.AspNetCore.Mvc.RazorPages.PageConventionCollection> pages)
     {
-        // Add custom payment method to checkout
-        services.AddTransient<IPaymentMethodCheckoutMiddleware, QRPaymentCheckoutMiddleware>();
-        
         base.Configure(pages);
     }
 }
